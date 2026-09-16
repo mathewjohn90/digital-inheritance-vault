@@ -15,8 +15,8 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
                         /opt/sonar-scanner/bin/sonar-scanner \
-                        -Dsonar.projectKey=digital-inheritance-vault \
-                        -Dsonar.projectName=digital-inheritance-vault \
+                        -Dsonar.projectKey=Digital-Inheritance-Vault
+                        -Dsonar.projectName=Digital-Inheritance-Vault \
                         -Dsonar.sources=.
                     '''
                 }
