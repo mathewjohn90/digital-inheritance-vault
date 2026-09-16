@@ -1,10 +1,30 @@
+```groovy
 pipeline {
     agent any
 
+    tools {
+        sonarQube 'sonar-scanner'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Code checkout completed'
+                git branch: 'main',
+                    url: 'https://github.com/mathewjohn90/digital-inheritance-vault.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=digital-inheritance-vault \
+                        -Dsonar.projectName=digital-inheritance-vault \
+                        -Dsonar.sources=.
+                    '''
+                }
             }
         }
 
@@ -15,3 +35,4 @@ pipeline {
         }
     }
 }
+```
