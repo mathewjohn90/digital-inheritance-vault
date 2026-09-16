@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -15,7 +14,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        sonar-scanner \
+                        /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=digital-inheritance-vault \
                         -Dsonar.projectName=digital-inheritance-vault \
                         -Dsonar.sources=.
@@ -31,4 +30,6 @@ pipeline {
         }
     }
 }
+
+
 
