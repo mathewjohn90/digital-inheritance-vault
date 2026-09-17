@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -45,8 +46,11 @@ pipeline {
             steps {
                 sh '''
                     python3 -m venv venv
+
                     ./venv/bin/pip install --upgrade pip
+
                     ./venv/bin/pip install -r requirements.txt
+
                     ./venv/bin/pip install pytest httpx2
                 '''
             }
@@ -76,6 +80,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
+                    echo "Building Docker image..."
                     docker build -t ${IMAGE} .
                 '''
             }
@@ -91,6 +96,8 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        echo "Logging in to AWS ECR..."
+
                         aws ecr get-login-password \
                         --region ${AWS_REGION} | \
                         docker login \
@@ -104,6 +111,7 @@ pipeline {
         stage('Push Image to ECR') {
             steps {
                 sh '''
+                    echo "Pushing image to ECR..."
                     docker push ${IMAGE}
                 '''
             }
@@ -112,11 +120,13 @@ pipeline {
         stage('Update Kubernetes Manifest') {
             steps {
                 sh '''
+                    echo "Updating Kubernetes deployment image..."
+
                     sed -i \
                     "s|image: .*|image: ${IMAGE}|" \
                     k8s/deployment.yml
 
-                    echo "Updated Kubernetes image:"
+                    echo "New image:"
                     grep "image:" k8s/deployment.yml
                 '''
             }
@@ -130,7 +140,8 @@ pipeline {
 
                     git add k8s/deployment.yml
 
-                    git commit -m "Update image to ${IMAGE_TAG}" || true
+                    git commit \
+                    -m "Update image to ${IMAGE_TAG}" || true
                 '''
             }
         }
@@ -156,11 +167,29 @@ pipeline {
 
     post {
         success {
-            echo 'Complete CI/CD pipeline completed successfully!'
+            echo '=========================================='
+            echo ' CI/CD PIPELINE COMPLETED SUCCESSFULLY '
+            echo '=========================================='
+            echo "Docker Image: ${IMAGE}"
+            echo "ECR Registry: ${ECR_REGISTRY}"
         }
 
         failure {
-            echo 'Pipeline failed. Check the failed stage.'
+            echo '=========================================='
+            echo ' PIPELINE FAILED '
+            echo '=========================================='
+            echo 'Check the failed stage in Jenkins.'
         }
     }
 }
+```
+
+**Important:** this Jenkinsfile assumes you already changed `test_e2e.py` so pytest discovers the test:
+
+```python
+def test_e2e():
+```
+
+If you haven't made that change yet, the pipeline will still stop at **Test** with `collected 0 items` and exit code 5.
+
+After pushing the corrected `test_e2e.py` and Jenkinsfile to `main`, run **Build Now**. The next target is to get **Test → SonarQube → Docker Build → ECR Push** all green.
