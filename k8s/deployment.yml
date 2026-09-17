@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
         - name: digital-inheritance-vault
-          image: 076510357908.dkr.ecr.ap-south-1.amazonaws.com/digital-inheritance-vault:latest
+          image: 076510357908.dkr.ecr.ap-south-1.amazonaws.com/digital-inheritance-vault:26
           ports:
             - containerPort: 8080
