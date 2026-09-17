@@ -21,6 +21,7 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 git branch: 'main',
+                    credentialsId: 'github-credentials',
                     url: 'https://github.com/mathewjohn90/digital-inheritance-vault.git'
             }
         }
@@ -30,8 +31,10 @@ pipeline {
                 sh '''
                     echo "Checking Git repository..."
                     git status
+
                     echo "Checking Kubernetes manifests..."
                     ls -la k8s/
+
                     test -f k8s/deployment.yml
                     test -f k8s/service.yml
                 '''
@@ -70,8 +73,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
-                    docker build \
-                    -t ${IMAGE} .
+                    docker build -t ${IMAGE} .
                 '''
             }
         }
@@ -111,7 +113,7 @@ pipeline {
                     "s|image: .*|image: ${IMAGE}|" \
                     k8s/deployment.yml
 
-                    echo "Updated deployment:"
+                    echo "Updated Kubernetes image:"
                     grep "image:" k8s/deployment.yml
                 '''
             }
@@ -132,20 +134,30 @@ pipeline {
 
         stage('Git Push') {
             steps {
-                sh '''
-                    git push origin HEAD:main
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-credentials',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        git push \
+                        https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/mathewjohn90/digital-inheritance-vault.git \
+                        HEAD:main
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'CI/CD pipeline completed successfully!'
+            echo 'Complete CI/CD pipeline completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed. Check the stage logs.'
+            echo 'Pipeline failed. Check the failed stage.'
         }
     }
 }
