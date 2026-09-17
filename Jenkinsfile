@@ -1,4 +1,3 @@
-```groovy
 pipeline {
     agent any
 
@@ -182,14 +181,3 @@ pipeline {
         }
     }
 }
-```
-
-**Important:** this Jenkinsfile assumes you already changed `test_e2e.py` so pytest discovers the test:
-
-```python
-def test_e2e():
-```
-
-If you haven't made that change yet, the pipeline will still stop at **Test** with `collected 0 items` and exit code 5.
-
-After pushing the corrected `test_e2e.py` and Jenkinsfile to `main`, run **Build Now**. The next target is to get **Test → SonarQube → Docker Build → ECR Push** all green.
